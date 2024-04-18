@@ -3,10 +3,35 @@ const path = require('path');
 const pgp = require('pg-promise')(/* options */)
 const session = require('express-session');
 const bodyParser = require('body-parser');
+const db = pgp('postgres://postgres:postgres@localhost:5432/postgres')
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+async function tableInit(){
+    try{
+        const query = `CREATE TABLE IF NOT EXISTS  public."Users"("ID" SERIAL PRIMARY KEY, "USERNAME" VARCHAR(255) UNIQUE NOT NULL, "PASSWORD" VARCHAR(255) UNIQUE NOT NULL )`
+        const result = await db.query(query)
+        console.log('Success.')
+    }
+    catch (err){
+        console.log("Error:",err)
+    }
+}
+async function userInit(){
+    try{
+        const result = await db.one(`SELECT COUNT(*) FROM public."Users"`);
+        if(result.count>0){
+            await db.none(`TRUNCATE public."Users"`)
+        }
+        await db.none(`INSERT INTO public."Users"("ID", "NAME", "PASSWORD") VALUES ('1','Iryna','123'),('2','Anastasia','222'),('3','Sofia','010'),('4','admin','111')`);
+        console.log('Users added successfully.')
+    }catch (err){
+        console.log("Error in userInit",err);
+    }
+}
 
+tableInit();
+userInit();
 app.use(session({
     secret: 'secret',
     resave: true,
@@ -15,7 +40,6 @@ app.use(session({
 app.use(express.json());
 
 //connect to database
-const db = pgp('postgres://postgres:postgres@localhost:5432/postgres')
 app.use(bodyParser.urlencoded({ extended: true }));
 
 
