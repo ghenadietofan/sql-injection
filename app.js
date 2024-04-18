@@ -86,19 +86,16 @@ app.post('/login', async (req, res) => {
 
 })
 
-
-
-app.post('/logout', (req,res)=>{
+app.get('/logout', (req,res)=>{
     req.session.destroy(err=>{
         if(err){
-            console.log("Error destroying session:",err);
-            res.sendStatus(500);
+            console.log("Error destroying session:", err);
+            res.status(500).send("Error destroying session");
         }else{
             console.log('redirect...')
-            res.redirect('/')
+            res.redirect('/login')
         }
     })
-    res.redirect('/')
 })
 app.get('/profile', (req, res) => {
     //   res.send(`Welcome ${req.session.user.username}`);
