@@ -1,7 +1,7 @@
 const express = require('express');
 const path = require('path');
 const pgp = require('pg-promise')(/* options */)
-const session = require('express-session');
+export const session = require('express-session');
 const bodyParser = require('body-parser');
 const db = pgp('postgres://postgres:postgres@localhost:5432/postgres')
 
@@ -23,15 +23,16 @@ async function userInit(){
         if(result.count>0){
             await db.none(`TRUNCATE public."Users"`)
         }
-        await db.none(`INSERT INTO public."Users"("ID", "NAME", "PASSWORD") VALUES ('1','Iryna','123'),('2','Anastasia','222'),('3','Sofia','010'),('4','admin','111')`);
+        console.log(result);
+        await db.none(`INSERT INTO public."Users" VALUES ('1','Iryna','123'),('2','Anastasia','222'),('3','Sofia','010'),('4','admin','111')`);
         console.log('Users added successfully.')
     }catch (err){
         console.log("Error in userInit",err);
     }
 }
 
-tableInit();
-userInit();
+tableInit().then(r => userInit());
+
 app.use(session({
     secret: 'secret',
     resave: true,
@@ -69,7 +70,7 @@ app.post('/login',async (req,res)=>{
     const {username, password} = req.body;
     console.log('username:',username);
     console.log('password:',password);
-    const user = await db.any(`SELECT * FROM public."Users" WHERE "NAME" = '${username}' AND "PASSWORD" = '${password}'`);
+    const user = await db.any(`SELECT * FROM public."Users" WHERE "USERNAME" = '${username}' AND "PASSWORD" = '${password}'`);
     if(user.length>0){
     req.session.loggedin = true;
     req.session.username = username;
@@ -92,6 +93,7 @@ app.get('/profile',(req,res)=>{
 })
 // Serve static files from the "public" directory
 app.use(express.static(path.join(__dirname, '/')));
+app.use(express.static(path.join(__dirname, '/components')));
 
 // Define a route to serve the index.html file
 
